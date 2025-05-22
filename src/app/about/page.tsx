@@ -13,9 +13,114 @@ import {
 import { baseURL } from "@/app/resources";
 import TableOfContents from "@/components/about/TableOfContents";
 import styles from "@/components/about/about.module.scss";
-import { person, about, social } from "@/app/resources/content";
+// import { person, about, social } from "@/app/resources/content";
 import React from "react";
 import { Meta, Schema } from "@/once-ui/modules";
+
+// Define TypeScript interfaces
+interface Image {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface Experience {
+  company: string;
+  role: string;
+  timeframe: string;
+  achievements: JSX.Element[];
+  images: Image[];
+}
+
+interface Institution {
+  name: string;
+  description: string;
+}
+
+interface Skill {
+  title: string;
+  description: string;
+  images?: Image[];
+}
+
+interface AboutContent {
+  title: string;
+  description: string;
+  path: string;
+  tableOfContent: {
+    display: boolean;
+  };
+  avatar: {
+    display: boolean;
+  };
+  calendar: {
+    display: boolean;
+    link: string;
+  };
+  intro: {
+    title: string;
+    display: boolean;
+    description: JSX.Element;
+  };
+  work: {
+    title: string;
+    display: boolean;
+    experiences: Experience[];
+  };
+  studies: {
+    title: string;
+    display: boolean;
+    institutions: Institution[];
+  };
+  technical: {
+    title: string;
+    display: boolean;
+    skills: Skill[];
+  };
+}
+
+interface Person {
+  name: string;
+  role: string;
+  avatar: string;
+  location: string;
+  languages: string[];
+}
+
+interface Social {
+  name: string;
+  link?: string;
+  icon: string;
+}
+
+interface TableOfContentsStructure {
+  title: string;
+  display: boolean;
+  items: string[];
+}
+
+// Mock data (replace with actual imports)
+const person: Person = {
+  name: "",
+  role: "",
+  avatar: "",
+  location: "",
+  languages: [],
+};
+const about: AboutContent = {
+  title: "",
+  description: "",
+  path: "",
+  tableOfContent: { display: false },
+  avatar: { display: false },
+  calendar: { display: false, link: "" },
+  intro: { title: "", display: false, description: <></> },
+  work: { title: "", display: false, experiences: [] },
+  studies: { title: "", display: false, institutions: [] },
+  technical: { title: "", display: false, skills: [] },
+};
+const social: Social[] = [];
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -28,7 +133,7 @@ export async function generateMetadata() {
 }
 
 export default function About() {
-  const structure = [
+  const structure: TableOfContentsStructure[] = [
     {
       title: about.intro.title,
       display: about.intro.display,
@@ -50,6 +155,7 @@ export default function About() {
       items: about.technical.skills.map((skill) => skill.title),
     },
   ];
+
   return (
     <Column maxWidth="m">
       <Schema
@@ -74,7 +180,7 @@ export default function About() {
           gap="32"
           hide="s"
         >
-          <TableOfContents structure={structure} about={about} />
+          {/* <TableOfContents structure={structure} about={about} /> */}
         </Column>
       )}
       <Flex fillWidth mobileDirection="column" horizontal="center">
@@ -96,7 +202,7 @@ export default function About() {
             </Flex>
             {person.languages.length > 0 && (
               <Flex wrap gap="8">
-                {person.languages.map((language, index) => (
+                {person.languages.map((language, index: number) => (
                   <Tag key={language} size="l">
                     {language}
                   </Tag>
@@ -118,9 +224,7 @@ export default function About() {
                 fitWidth
                 border="brand-alpha-medium"
                 className={styles.blockAlign}
-                style={{
-                  backdropFilter: "blur(var(--static-space-1))",
-                }}
+                style={{ backdropFilter: "blur(var(--static-space-1))" }}
                 background="brand-alpha-weak"
                 radius="full"
                 padding="4"
@@ -169,7 +273,6 @@ export default function About() {
                       <React.Fragment key={item.name}>
                         <Button
                           className="s-flex-hide"
-                          key={item.name}
                           href={item.link}
                           prefixIcon={item.icon}
                           label={item.name}
@@ -179,7 +282,6 @@ export default function About() {
                         <IconButton
                           className="s-flex-show"
                           size="l"
-                          key={`${item.name}-icon`}
                           href={item.link}
                           icon={item.icon}
                           variant="secondary"
@@ -213,7 +315,7 @@ export default function About() {
                 {about.work.title}
               </Heading>
               <Column fillWidth gap="l" marginBottom="40">
-                {about.work.experiences.map((experience, index) => (
+                {about.work.experiences.map((experience, index: number) => (
                   <Column
                     key={`${experience.company}-${experience.role}-${index}`}
                     fillWidth
@@ -256,24 +358,19 @@ export default function About() {
                     </Column>
                     {experience.images.length > 0 && (
                       <Flex fillWidth paddingTop="m" paddingLeft="40" wrap>
-                        {experience.images.map((image, index) => (
+                        {experience.images.map((image, index: number) => (
                           <Flex
                             key={index}
                             border="neutral-medium"
                             radius="m"
-                            //@ts-ignore
                             minWidth={image.width}
-                            //@ts-ignore
                             height={image.height}
                           >
                             <SmartImage
                               enlarge
                               radius="m"
-                              //@ts-ignore
                               sizes={image.width.toString()}
-                              //@ts-ignore
                               alt={image.alt}
-                              //@ts-ignore
                               src={image.src}
                             />
                           </Flex>
@@ -297,23 +394,25 @@ export default function About() {
                 {about.studies.title}
               </Heading>
               <Column fillWidth gap="l" marginBottom="40">
-                {about.studies.institutions.map((institution, index) => (
-                  <Column
-                    key={`${institution.name}-${index}`}
-                    fillWidth
-                    gap="4"
-                  >
-                    <Text id={institution.name} variant="heading-strong-l">
-                      {institution.name}
-                    </Text>
-                    <Text
-                      variant="heading-default-xs"
-                      onBackground="neutral-weak"
+                {about.studies.institutions.map(
+                  (institution, index: number) => (
+                    <Column
+                      key={`${institution.name}-${index}`}
+                      fillWidth
+                      gap="4"
                     >
-                      {institution.description}
-                    </Text>
-                  </Column>
-                ))}
+                      <Text id={institution.name} variant="heading-strong-l">
+                        {institution.name}
+                      </Text>
+                      <Text
+                        variant="heading-default-xs"
+                        onBackground="neutral-weak"
+                      >
+                        {institution.description}
+                      </Text>
+                    </Column>
+                  )
+                )}
               </Column>
             </>
           )}
@@ -329,32 +428,27 @@ export default function About() {
                 {about.technical.title}
               </Heading>
               <Column fillWidth gap="l">
-                {about.technical.skills.map((skill, index) => (
-                  <Column key={`${skill}-${index}`} fillWidth gap="4">
+                {about.technical.skills.map((skill, index: number) => (
+                  <Column key={`${skill.title}-${index}`} fillWidth gap="4">
                     <Text variant="heading-strong-l">{skill.title}</Text>
                     <Text variant="body-default-m" onBackground="neutral-weak">
                       {skill.description}
                     </Text>
                     {skill.images && skill.images.length > 0 && (
                       <Flex fillWidth paddingTop="m" gap="12" wrap>
-                        {skill.images.map((image, index) => (
+                        {skill.images.map((image, index: number) => (
                           <Flex
                             key={index}
                             border="neutral-medium"
                             radius="m"
-                            //@ts-ignore
                             minWidth={image.width}
-                            //@ts-ignore
                             height={image.height}
                           >
                             <SmartImage
                               enlarge
                               radius="m"
-                              //@ts-ignore
                               sizes={image.width.toString()}
-                              //@ts-ignore
                               alt={image.alt}
-                              //@ts-ignore
                               src={image.src}
                             />
                           </Flex>
