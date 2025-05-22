@@ -13,9 +13,20 @@ import {
 import { baseURL } from "@/app/resources";
 import TableOfContents from "@/components/about/TableOfContents";
 import styles from "@/components/about/about.module.scss";
-// import { person, about, social } from "@/app/resources/content";
+import { person, about, social } from "@/app/resources/content";
 import React from "react";
 import { Meta, Schema } from "@/once-ui/modules";
+
+// Utility function to convert JSX.Element to string
+const elementToString = (element: string | JSX.Element): string => {
+  if (typeof element === "string") return element;
+  // Extract string content from JSX.Element (specific to <><Icon /> Text</> structure)
+  return (
+    (element as any).props?.children?.[1] ||
+    (element as any).props?.children ||
+    ""
+  );
+};
 
 // Define TypeScript interfaces
 interface Image {
@@ -26,21 +37,21 @@ interface Image {
 }
 
 interface Experience {
-  company: string;
-  role: string;
-  timeframe: string;
+  company: string | JSX.Element;
+  role: string | JSX.Element;
+  timeframe: string | JSX.Element;
   achievements: JSX.Element[];
   images: Image[];
 }
 
 interface Institution {
-  name: string;
-  description: string;
+  name: string | JSX.Element;
+  description: string | JSX.Element;
 }
 
 interface Skill {
-  title: string;
-  description: string;
+  title: string | JSX.Element;
+  description: JSX.Element;
   images?: Image[];
 }
 
@@ -50,6 +61,7 @@ interface AboutContent {
   path: string;
   tableOfContent: {
     display: boolean;
+    subItems: boolean;
   };
   avatar: {
     display: boolean;
@@ -100,59 +112,46 @@ interface TableOfContentsStructure {
   items: string[];
 }
 
-// Mock data (replace with actual imports)
-const person: Person = {
-  name: "",
-  role: "",
-  avatar: "",
-  location: "",
-  languages: [],
-};
-const about: AboutContent = {
-  title: "",
-  description: "",
-  path: "",
-  tableOfContent: { display: false },
-  avatar: { display: false },
-  calendar: { display: false, link: "" },
-  intro: { title: "", display: false, description: <></> },
-  work: { title: "", display: false, experiences: [] },
-  studies: { title: "", display: false, institutions: [] },
-  technical: { title: "", display: false, skills: [] },
-};
-const social: Social[] = [];
+// Type assertion to ensure `about` matches `AboutContent`
+const typedAbout = about as AboutContent;
 
 export async function generateMetadata() {
   return Meta.generate({
-    title: about.title,
-    description: about.description,
+    title: typedAbout.title,
+    description: typedAbout.description,
     baseURL: baseURL,
-    image: `${baseURL}/og?title=${encodeURIComponent(about.title)}`,
-    path: about.path,
+    image: `${baseURL}/og?title=${encodeURIComponent(typedAbout.title)}`,
+    path: typedAbout.path,
   });
 }
 
 export default function About() {
   const structure: TableOfContentsStructure[] = [
     {
-      title: about.intro.title,
-      display: about.intro.display,
+      title: typedAbout.intro.title,
+      display: typedAbout.intro.display,
       items: [],
     },
     {
-      title: about.work.title,
-      display: about.work.display,
-      items: about.work.experiences.map((experience) => experience.company),
+      title: typedAbout.work.title,
+      display: typedAbout.work.display,
+      items: typedAbout.work.experiences.map((experience) =>
+        elementToString(experience.company)
+      ),
     },
     {
-      title: about.studies.title,
-      display: about.studies.display,
-      items: about.studies.institutions.map((institution) => institution.name),
+      title: typedAbout.studies.title,
+      display: typedAbout.studies.display,
+      items: typedAbout.studies.institutions.map((institution) =>
+        elementToString(institution.name)
+      ),
     },
     {
-      title: about.technical.title,
-      display: about.technical.display,
-      items: about.technical.skills.map((skill) => skill.title),
+      title: typedAbout.technical.title,
+      display: typedAbout.technical.display,
+      items: typedAbout.technical.skills.map((skill) =>
+        elementToString(skill.title)
+      ),
     },
   ];
 
@@ -161,17 +160,17 @@ export default function About() {
       <Schema
         as="webPage"
         baseURL={baseURL}
-        title={about.title}
-        description={about.description}
-        path={about.path}
-        image={`${baseURL}/og?title=${encodeURIComponent(about.title)}`}
+        title={typedAbout.title}
+        description={typedAbout.description}
+        path={typedAbout.path}
+        image={`${baseURL}/og?title=${encodeURIComponent(typedAbout.title)}`}
         author={{
           name: person.name,
-          url: `${baseURL}${about.path}`,
+          url: `${baseURL}${typedAbout.path}`,
           image: `${baseURL}${person.avatar}`,
         }}
       />
-      {about.tableOfContent.display && (
+      {typedAbout.tableOfContent.display && (
         <Column
           left="0"
           style={{ top: "50%", transform: "translateY(-50%)" }}
@@ -180,11 +179,11 @@ export default function About() {
           gap="32"
           hide="s"
         >
-          {/* <TableOfContents structure={structure} about={about} /> */}
+          <TableOfContents structure={structure} about={typedAbout} />
         </Column>
       )}
       <Flex fillWidth mobileDirection="column" horizontal="center">
-        {about.avatar.display && (
+        {typedAbout.avatar.display && (
           <Column
             className={styles.avatar}
             position="sticky"
@@ -213,13 +212,13 @@ export default function About() {
         )}
         <Column className={styles.blockAlign} flex={9} maxWidth={40}>
           <Column
-            id={about.intro.title}
+            id={typedAbout.intro.title}
             fillWidth
             minHeight="160"
             vertical="center"
             marginBottom="32"
           >
-            {about.calendar.display && (
+            {typedAbout.calendar.display && (
               <Flex
                 fitWidth
                 border="brand-alpha-medium"
@@ -239,7 +238,7 @@ export default function About() {
                 />
                 <Flex paddingX="8">Schedule a call</Flex>
                 <IconButton
-                  href={about.calendar.link}
+                  href={typedAbout.calendar.link}
                   data-border="rounded"
                   variant="secondary"
                   icon="chevronRight"
@@ -293,115 +292,129 @@ export default function About() {
             )}
           </Column>
 
-          {about.intro.display && (
+          {typedAbout.intro.display && (
             <Column
               textVariant="body-default-l"
               fillWidth
               gap="m"
               marginBottom="xl"
             >
-              {about.intro.description}
+              {typedAbout.intro.description}
             </Column>
           )}
 
-          {about.work.display && (
+          {typedAbout.work.display && (
             <>
               <Heading
                 as="h2"
-                id={about.work.title}
+                id={typedAbout.work.title}
                 variant="display-strong-s"
                 marginBottom="m"
               >
-                {about.work.title}
+                {typedAbout.work.title}
               </Heading>
               <Column fillWidth gap="l" marginBottom="40">
-                {about.work.experiences.map((experience, index: number) => (
-                  <Column
-                    key={`${experience.company}-${experience.role}-${index}`}
-                    fillWidth
-                  >
-                    <Flex
+                {typedAbout.work.experiences.map(
+                  (experience, index: number) => (
+                    <Column
+                      key={`${elementToString(
+                        experience.company
+                      )}-${elementToString(experience.role)}-${index}`}
                       fillWidth
-                      horizontal="space-between"
-                      vertical="end"
-                      marginBottom="4"
                     >
-                      <Text id={experience.company} variant="heading-strong-l">
-                        {experience.company}
-                      </Text>
-                      <Text
-                        variant="heading-default-xs"
-                        onBackground="neutral-weak"
+                      <Flex
+                        fillWidth
+                        horizontal="space-between"
+                        vertical="end"
+                        marginBottom="4"
                       >
-                        {experience.timeframe}
+                        <Text
+                          id={elementToString(experience.company)}
+                          variant="heading-strong-l"
+                        >
+                          {experience.company}
+                        </Text>
+                        <Text
+                          variant="heading-default-xs"
+                          onBackground="neutral-weak"
+                        >
+                          {experience.timeframe}
+                        </Text>
+                      </Flex>
+                      <Text
+                        variant="body-default-s"
+                        onBackground="brand-weak"
+                        marginBottom="m"
+                      >
+                        {experience.role}
                       </Text>
-                    </Flex>
-                    <Text
-                      variant="body-default-s"
-                      onBackground="brand-weak"
-                      marginBottom="m"
-                    >
-                      {experience.role}
-                    </Text>
-                    <Column as="ul" gap="16">
-                      {experience.achievements.map(
-                        (achievement: JSX.Element, index: number) => (
-                          <Text
-                            as="li"
-                            variant="body-default-m"
-                            key={`${experience.company}-${index}`}
-                          >
-                            {achievement}
-                          </Text>
-                        )
+                      <Column as="ul" gap="16">
+                        {experience.achievements.map(
+                          (achievement: JSX.Element, index: number) => (
+                            <Text
+                              as="li"
+                              variant="body-default-m"
+                              key={`${elementToString(
+                                experience.company
+                              )}-${index}`}
+                            >
+                              {achievement}
+                            </Text>
+                          )
+                        )}
+                      </Column>
+                      {experience.images.length > 0 && (
+                        <Flex fillWidth paddingTop="m" paddingLeft="40" wrap>
+                          {experience.images.map(
+                            (image: Image, index: number) => (
+                              <Flex
+                                key={index}
+                                border="neutral-medium"
+                                radius="m"
+                                minWidth={image.width}
+                                height={image.height}
+                              >
+                                <SmartImage
+                                  enlarge
+                                  radius="m"
+                                  sizes={image.width.toString()}
+                                  alt={image.alt}
+                                  src={image.src}
+                                />
+                              </Flex>
+                            )
+                          )}
+                        </Flex>
                       )}
                     </Column>
-                    {experience.images.length > 0 && (
-                      <Flex fillWidth paddingTop="m" paddingLeft="40" wrap>
-                        {experience.images.map((image, index: number) => (
-                          <Flex
-                            key={index}
-                            border="neutral-medium"
-                            radius="m"
-                            minWidth={image.width}
-                            height={image.height}
-                          >
-                            <SmartImage
-                              enlarge
-                              radius="m"
-                              sizes={image.width.toString()}
-                              alt={image.alt}
-                              src={image.src}
-                            />
-                          </Flex>
-                        ))}
-                      </Flex>
-                    )}
-                  </Column>
-                ))}
+                  )
+                )}
               </Column>
             </>
           )}
 
-          {about.studies.display && (
+          {typedAbout.studies.display && (
             <>
               <Heading
                 as="h2"
-                id={about.studies.title}
+                id={typedAbout.studies.title}
                 variant="display-strong-s"
                 marginBottom="m"
               >
-                {about.studies.title}
+                {typedAbout.studies.title}
               </Heading>
               <Column fillWidth gap="l" marginBottom="40">
-                {about.studies.institutions.map(
+                {typedAbout.studies.institutions.map(
                   (institution, index: number) => (
                     <Column
-                      key={`${institution.name}-${index}`}
+                      key={`${elementToString(institution.name)}-${index}`}
                       fillWidth
                       gap="4"
                     >
-                      <Text id={institution.name} variant="heading-strong-l">
+                      <Text
+                        id={elementToString(institution.name)}
+                        variant="heading-strong-l"
+                      >
                         {institution.name}
                       </Text>
                       <Text
@@ -417,46 +430,55 @@ export default function About() {
             </>
           )}
 
-          {about.technical.display && (
+          {typedAbout.technical.display && (
             <>
               <Heading
                 as="h2"
-                id={about.technical.title}
+                id={typedAbout.technical.title}
                 variant="display-strong-s"
                 marginBottom="40"
               >
-                {about.technical.title}
+                {typedAbout.technical.title}
               </Heading>
               <Column fillWidth gap="l">
-                {about.technical.skills.map((skill, index: number) => (
-                  <Column key={`${skill.title}-${index}`} fillWidth gap="4">
-                    <Text variant="heading-strong-l">{skill.title}</Text>
-                    <Text variant="body-default-m" onBackground="neutral-weak">
-                      {skill.description}
-                    </Text>
-                    {skill.images && skill.images.length > 0 && (
-                      <Flex fillWidth paddingTop="m" gap="12" wrap>
-                        {skill.images.map((image, index: number) => (
-                          <Flex
-                            key={index}
-                            border="neutral-medium"
-                            radius="m"
-                            minWidth={image.width}
-                            height={image.height}
-                          >
-                            <SmartImage
-                              enlarge
+                {(typedAbout.technical.skills as Skill[]).map(
+                  (skill, index: number) => (
+                    <Column
+                      key={`${elementToString(skill.title)}-${index}`}
+                      fillWidth
+                      gap="4"
+                    >
+                      <Text variant="heading-strong-l">{skill.title}</Text>
+                      <Text
+                        variant="body-default-m"
+                        onBackground="neutral-weak"
+                      >
+                        {skill.description}
+                      </Text>
+                      {skill.images && skill.images.length > 0 && (
+                        <Flex fillWidth paddingTop="m" gap="12" wrap>
+                          {skill.images.map((image: Image, index: number) => (
+                            <Flex
+                              key={index}
+                              border="neutral-medium"
                               radius="m"
-                              sizes={image.width.toString()}
-                              alt={image.alt}
-                              src={image.src}
-                            />
-                          </Flex>
-                        ))}
-                      </Flex>
-                    )}
-                  </Column>
-                ))}
+                              minWidth={image.width}
+                              height={image.height}
+                            >
+                              <SmartImage
+                                enlarge
+                                radius="m"
+                                sizes={image.width.toString()}
+                                alt={image.alt}
+                                src={image.src}
+                              />
+                            </Flex>
+                          ))}
+                        </Flex>
+                      )}
+                    </Column>
+                  )
+                )}
               </Column>
             </>
           )}
